@@ -9,6 +9,9 @@ import {ProtoRecord} from './proto_record';
 import {Locals} from './parser/locals';
 import {Pipes} from './pipes/pipes';
 import {CHECK_ALWAYS, CHECK_ONCE, CHECKED, DETACHED, ON_PUSH} from './constants';
+import {wtfCreateScope, wtfLeave, WtfScopeFn} from '../profile/profile';
+
+var _scope_check: WtfScopeFn = wtfCreateScope(`ChangeDetector#check(ascii id, bool throwOnChange)`);
 
 class _Context {
   constructor(public element: any, public componentElement: any, public instance: any,
@@ -64,16 +67,13 @@ export class AbstractChangeDetector<T> implements ChangeDetector {
 
   runDetectChanges(throwOnChange: boolean): void {
     if (this.mode === DETACHED || this.mode === CHECKED) return;
-
+    var s = _scope_check(this.id, throwOnChange);
     this.detectChangesInRecords(throwOnChange);
-
     this._detectChangesInLightDomChildren(throwOnChange);
-
     if (throwOnChange === false) this.callOnAllChangesDone();
-
     this._detectChangesInShadowDomChildren(throwOnChange);
-
     if (this.mode === CHECK_ONCE) this.mode = CHECKED;
+    wtfLeave(s);
   }
 
   // This method is not intended to be overridden. Subclasses should instead provide an
